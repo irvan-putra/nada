@@ -41,7 +41,7 @@ jobs:
       - name: run instrumentation tests on an emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 33
           arch: x86_64
           emulator-boot-timeout: 900
           script: |
