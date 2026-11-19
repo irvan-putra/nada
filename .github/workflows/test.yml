@@ -1,0 +1,28 @@
+name: test
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: python -m unittest discover -s tests -v
+      - name: optional mido cross-check
+        run: pip install mido && python -m unittest tests.test_nada -v
+      - name: JS/Python byte parity on example fixtures
+        run: |
+          node tests/parity.js
+          for f in examples/*.json; do
+            b=$(basename "$f" .json)
+            python nada.py build "$f" -o "/tmp/$b.py.mid"
+            cmp "/tmp/$b.py.mid" "/tmp/$b.js.mid"
+          done

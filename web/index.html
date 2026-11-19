@@ -133,12 +133,18 @@ el("build").onclick = () => {
     const recipe = parse();
     const bytes = nada.buildMidi(recipe);
     const name = recipe.title.replace(/ /g, "_") + ".mid";
-    const url = URL.createObjectURL(new Blob([bytes], { type: "audio/midi" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (window.NadaBridge) {
+      let binary = "";
+      for (const b of bytes) binary += String.fromCharCode(b);
+      window.NadaBridge.saveMidi(btoa(binary), name);
+    } else {
+      const url = URL.createObjectURL(new Blob([bytes], { type: "audio/midi" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
     const notes = recipe.tracks.reduce((s, t) => s + t.notes.length, 0);
     built = { recipe, bytes };
     el("play").disabled = false;

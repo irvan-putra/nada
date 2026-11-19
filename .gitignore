@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 *.mid
+android/app/src/main/assets/
+android/.gradle/
+android/**/build/
+android/local.properties

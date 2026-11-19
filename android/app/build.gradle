@@ -1,0 +1,25 @@
+plugins {
+    id "com.android.application"
+    id "org.jetbrains.kotlin.android"
+}
+
+android {
+    namespace "com.vanipy.nada"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.vanipy.nada"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "0.1.0"
+    }
+}
+
+// Single source of truth: ../web holds the only copy of the web app.
+// Sync it into assets at build time so the music logic is not duplicated.
+tasks.register("syncWebAssets", Copy) {
+    from("../web")
+    into("src/main/assets/web")
+}
+preBuild.dependsOn("syncWebAssets")

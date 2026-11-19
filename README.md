@@ -20,6 +20,23 @@ python3 nada.py inspect twinkle.mid
 python3 nada.py instruments        # list General MIDI instrument names
 ```
 
+## Web version
+
+`web/` is a dependency-free browser version of the same tool: open
+`web/index.html` (or serve the folder statically) to edit a recipe,
+validate it, play an approximate synth preview and download the `.mid`.
+`web/nada.js` mirrors `nada.py` validation and writing; the fixtures in
+`examples/` are the cross-runtime contract, and `tests/parity.js`
+(node) proves both implementations produce byte-identical files for
+them. Everything runs locally; nothing is uploaded.
+
+## Android
+
+`android/` wraps the same `web/` assets in an offline WebView app, so
+the music logic stays a single shared implementation (the web JS core
+plus the Python CLI, kept honest by the parity fixtures) instead of a
+third copy.
+
 Play the result in any MIDI player, or open it in the Tengok viewer
 project to look at the notes.
 
@@ -65,9 +82,10 @@ project to look at the notes.
 
 Validation is strict on purpose: unknown keys, out-of-range values and
 impossible timings fail with a specific message naming the field, so the
-recipe's author (human or chatbot) can fix it and retry. Limits keep a
-broken recipe from producing a huge or absurd file (64 tracks, 100k
-notes per track, 10M ticks total).
+recipe's author (human or chatbot) can fix it and retry. Bounds keep a
+broken or hostile recipe from producing a huge or slow build: 4 MiB of
+JSON, 64 tracks, 100k notes per track and 200k total, 1M pitched events,
+10M ticks.
 
 ## What nada does not do
 
