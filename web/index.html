@@ -229,6 +229,22 @@ function stopPreview() {
   el("stop").disabled = true;
 }
 el("stop").onclick = stopPreview;
+// --- self-test hook (file://...#selftest): used by headless checks ---
+if (location.hash === "#selftest") {
+  window.addEventListener("load", () => {
+    const out = [];
+    window.NadaBridge = { saveMidi: (b64, name) => {
+      const bin = atob(b64);
+      out.push(`bridge:${name}:${bin.length}:${bin.charCodeAt(0)}`);
+    }};
+    el("validate").click();
+    out.push("validate:" + status.textContent.slice(0, 40));
+    el("build").click();
+    out.push("build:" + status.textContent.slice(0, 40));
+    document.title = out.join(" | ");
+    document.body.insertAdjacentHTML("beforeend",
+      `<pre id="selftest">${out.join("\n")}</pre>`);
+  });
+}
 </script>
-</body>
 </html>
