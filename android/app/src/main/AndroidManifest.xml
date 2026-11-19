@@ -3,7 +3,6 @@
     <!-- No INTERNET permission: the app runs fully offline from bundled assets. -->
     <application
         android:label="nada"
-        android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
         android:supportsRtl="true">
         <activity
             android:name=".MainActivity"
