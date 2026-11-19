@@ -38,4 +38,7 @@ jobs:
         with:
           api-level: 34
           arch: x86_64
-          script: gradle -p android connectedDebugAndroidTest
+          script: |
+            adb shell settings put global verifier_verify_adb_installs 0
+            adb shell settings put global package_verifier_enable 0
+            gradle -p android connectedDebugAndroidTest
