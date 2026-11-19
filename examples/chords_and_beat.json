@@ -1,0 +1,39 @@
+{
+  "title": "chords and beat",
+  "tempo": 120,
+  "time_signature": [4, 4],
+  "tracks": [
+    {
+      "name": "piano",
+      "instrument": "Acoustic Grand Piano",
+      "notes": [
+        {"chord": ["C3", "E3", "G3"], "start": 0, "duration": 4},
+        {"chord": ["F3", "A3", "C4"], "start": 4, "duration": 4},
+        {"chord": ["G3", "B3", "D4"], "start": 8, "duration": 4},
+        {"chord": ["C3", "E3", "G3"], "start": 12, "duration": 4}
+      ]
+    },
+    {
+      "name": "drums",
+      "drums": true,
+      "notes": [
+        {"note": "kick", "start": 0, "duration": 0.25, "velocity": 110},
+        {"note": "closed hihat", "start": 0.5, "duration": 0.25},
+        {"note": "snare", "start": 1, "duration": 0.25},
+        {"note": "closed hihat", "start": 1.5, "duration": 0.25},
+        {"note": "kick", "start": 2, "duration": 0.25, "velocity": 110},
+        {"note": "closed hihat", "start": 2.5, "duration": 0.25},
+        {"note": "snare", "start": 3, "duration": 0.25},
+        {"note": "closed hihat", "start": 3.5, "duration": 0.25},
+        {"note": "kick", "start": 4, "duration": 0.25, "velocity": 110},
+        {"note": "closed hihat", "start": 4.5, "duration": 0.25},
+        {"note": "snare", "start": 5, "duration": 0.25},
+        {"note": "closed hihat", "start": 5.5, "duration": 0.25},
+        {"note": "kick", "start": 6, "duration": 0.25, "velocity": 110},
+        {"note": "closed hihat", "start": 6.5, "duration": 0.25},
+        {"note": "snare", "start": 7, "duration": 0.25},
+        {"note": "crash", "start": 7.5, "duration": 0.5, "velocity": 100}
+      ]
+    }
+  ]
+}
