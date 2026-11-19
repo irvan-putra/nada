@@ -15,6 +15,18 @@ android {
         jvmTarget = "17"
     }
 
+    signingConfigs {
+        release {
+            def ksFile = System.getenv("SIGNING_KEYSTORE_PATH")
+            if (ksFile != null) {
+                storeFile file(ksFile)
+                storePassword System.getenv("SIGNING_STORE_PASSWORD")
+                keyAlias System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword System.getenv("SIGNING_KEY_PASSWORD")
+            }
+        }
+    }
+
     defaultConfig {
         applicationId "com.vanipy.nada"
         minSdk 24
@@ -22,6 +34,15 @@ android {
         versionCode 1
         versionName "0.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+}
+
+    buildTypes {
+        release {
+            if (System.getenv("SIGNING_KEYSTORE_PATH") != null) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 }
 
