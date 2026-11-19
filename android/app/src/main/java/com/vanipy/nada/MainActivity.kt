@@ -11,9 +11,12 @@ import android.util.Base64
 
 class MainActivity : Activity() {
 
+    internal lateinit var webView: WebView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val webView = WebView(this)
+        this.webView = webView
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.addJavascriptInterface(object {
