@@ -37,9 +37,8 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          target: google_apis
           arch: x86_64
-          ram-size: 4096M
+          emulator-boot-timeout: 900
           script: |
             adb shell settings put global verifier_verify_adb_installs 0
             adb shell settings put global package_verifier_enable 0
