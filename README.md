@@ -5,7 +5,7 @@ Deterministic MIDI generation: a small structured recipe in, a valid
 recipe always produces byte-identical output.
 
 nada exists so that something that cannot write code (a person describing
-a song, or a chatbot like [Daya](https://github.com/irvan-putra/daya))
+a song, or a chatbot such as the Daya project)
 can still produce real music files: it writes a small JSON recipe, and
 nada validates it and compiles it to a Standard MIDI File. The recipe is
 the interface; the code is nada's problem.
@@ -20,8 +20,8 @@ python3 nada.py inspect twinkle.mid
 python3 nada.py instruments        # list General MIDI instrument names
 ```
 
-Play the result in any MIDI player or open it in
-[Tengok](https://github.com/irvan-putra/tengok) to look at the notes.
+Play the result in any MIDI player, or open it in the Tengok viewer
+project to look at the notes.
 
 ## Recipe format
 

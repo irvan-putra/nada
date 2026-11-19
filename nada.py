@@ -21,6 +21,9 @@ VERSION = "0.1.0"
 TICKS_PER_BEAT_DEFAULT = 480
 MAX_TRACKS = 64
 MAX_NOTES_PER_TRACK = 100_000
+MAX_TOTAL_NOTES = 200_000      # across all tracks
+MAX_PITCH_EVENTS = 1_000_000   # notes x chord pitches, bounds CPU and output size
+MAX_RECIPE_BYTES = 4 * 1024 * 1024  # JSON input size
 MAX_TOTAL_TICKS = 10_000_000
 MIN_TEMPO_BPM = 10
 MAX_TEMPO_BPM = 600
@@ -169,6 +172,8 @@ def validate_recipe(data):
 
     used_channels = {}
     tracks = []
+    total_notes_all = 0
+    total_pitch_events = 0
     for i, t in enumerate(data["tracks"]):
         path = f"recipe.tracks[{i}]"
         _require(isinstance(t, dict), path, "must be an object")
@@ -252,6 +257,12 @@ def validate_recipe(data):
             total_ticks = max(total_ticks, start + dur)
         _require(total_ticks <= MAX_TOTAL_TICKS, path,
                  f"song too long (max {MAX_TOTAL_TICKS} ticks)")
+        total_notes_all += len(notes)
+        _require(total_notes_all <= MAX_TOTAL_NOTES, path,
+                 f"too many notes in total (max {MAX_TOTAL_NOTES})")
+        total_pitch_events += sum(len(n["pitches"]) for n in notes)
+        _require(total_pitch_events <= MAX_PITCH_EVENTS, path,
+                 f"too many pitched events in total (max {MAX_PITCH_EVENTS})")
         tracks.append({"name": name, "instrument": instrument, "channel": channel,
                        "drums": drums, "notes": notes})
     return {"title": title, "tempo": tempo, "time_signature": sig,
@@ -443,7 +454,12 @@ def _parse_track(body):
 def cmd_build(args):
     try:
         with open(args.recipe, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            text = f.read()
+        if len(text.encode("utf-8")) > MAX_RECIPE_BYTES:
+            print(f"nada: invalid JSON in {args.recipe}: "
+                  f"file too large (max {MAX_RECIPE_BYTES} bytes)", file=sys.stderr)
+            return 2
+        data = json.loads(text)
     except json.JSONDecodeError as e:
         print(f"nada: invalid JSON in {args.recipe}: {e}", file=sys.stderr)
         return 2

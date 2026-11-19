@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nada - deterministic MIDI from a recipe</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; max-width: 52rem; margin: 0 auto;
+         padding: 1rem; line-height: 1.45; }
+  h1 { font-size: 1.4rem; margin-bottom: 0; }
+  h1 .sub { font-weight: normal; font-size: 0.9rem; opacity: 0.75; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 18rem;
+             font-family: ui-monospace, monospace; font-size: 0.85rem;
+             padding: 0.5rem; border: 1px solid #8886; border-radius: 6px;
+             background: transparent; color: inherit; }
+  button { font: inherit; padding: 0.45rem 0.9rem; margin: 0.3rem 0.3rem 0.3rem 0;
+           border: 1px solid #8888; border-radius: 6px; background: transparent;
+           color: inherit; cursor: pointer; }
+  button.primary { background: #0b7285; border-color: #0b7285; color: #fff; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #status { white-space: pre-wrap; font-family: ui-monospace, monospace;
+            font-size: 0.85rem; padding: 0.5rem; border-radius: 6px; }
+  #status.ok { background: #2b8a3e22; }
+  #status.err { background: #c92a2a22; }
+  details { margin-top: 0.6rem; font-size: 0.9rem; }
+  .note { font-size: 0.85rem; opacity: 0.75; }
+</style>
+</head>
+<body>
+<h1>nada <span class="sub">deterministic MIDI from a small JSON recipe</span></h1>
+<p class="note">Same recipe, same file, every time. Everything runs locally in
+your browser; nothing is uploaded.</p>
+
+<textarea id="recipe" spellcheck="false"></textarea>
+<div>
+  <button id="validate">Validate</button>
+  <button id="build" class="primary">Build .mid</button>
+  <button id="play" disabled>Play preview</button>
+  <button id="stop" disabled>Stop</button>
+</div>
+<div id="status"></div>
+<p class="note">Preview uses simple synth tones; instruments are approximate.
+The exported .mid carries the real General MIDI instrument numbers.</p>
+<details>
+  <summary>Recipe format</summary>
+  <pre>{
+  "title": "my song",
+  "tempo": 120,
+  "time_signature": [4, 4],
+  "tracks": [
+    {"name": "melody", "instrument": "Music Box",
+     "notes": [{"note": "C4", "start": 0, "duration": 1},
+               {"chord": ["E4", "G4"], "start": 1, "duration": 0.5}]},
+    {"name": "drums", "drums": true,
+     "notes": [{"note": "kick", "start": 0, "duration": 0.25}]}
+  ]
+}</pre>
+  <p>Times are in beats. Notes: C4, F#3, Bb5 (C4 = middle C) or 0-127.
+  Drums: kick, snare, closed hihat, open hihat, crash, ride, clap,
+  low/mid/high tom, rimshot, cowbell, tambourine, pedal hihat.</p>
+</details>
+
+<script src="nada.js"></script>
+<script>
+"use strict";
+const el = id => document.getElementById(id);
+const status = el("status");
+let built = null; // {recipe, bytes, events, seconds}
+
+const EXAMPLE = `{
+  "title": "twinkle twinkle",
+  "tempo": 100,
+  "time_signature": [4, 4],
+  "tracks": [
+    {
+      "name": "melody",
+      "instrument": "Music Box",
+      "notes": [
+        {"note": "C4", "start": 0, "duration": 1},
+        {"note": "C4", "start": 1, "duration": 1},
+        {"note": "G4", "start": 2, "duration": 1},
+        {"note": "G4", "start": 3, "duration": 1},
+        {"note": "A4", "start": 4, "duration": 1},
+        {"note": "A4", "start": 5, "duration": 1},
+        {"note": "G4", "start": 6, "duration": 2},
+        {"note": "F4", "start": 8, "duration": 1},
+        {"note": "F4", "start": 9, "duration": 1},
+        {"note": "E4", "start": 10, "duration": 1},
+        {"note": "E4", "start": 11, "duration": 1},
+        {"note": "D4", "start": 12, "duration": 1},
+        {"note": "D4", "start": 13, "duration": 1},
+        {"note": "C4", "start": 14, "duration": 2}
+      ]
+    }
+  ]
+}`;
+el("recipe").value = EXAMPLE;
+
+function say(msg, ok) {
+  status.textContent = msg;
+  status.className = ok ? "ok" : "err";
+}
+
+function parse() {
+  const text = el("recipe").value;
+  if (new TextEncoder().encode(text).length > nada.MAX_RECIPE_BYTES) {
+    throw new nada.RecipeError("recipe: text too large (max "
+      + nada.MAX_RECIPE_BYTES + " bytes)");
+  }
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new nada.RecipeError("invalid JSON: " + e.message);
+  }
+  return nada.validateRecipe(data);
+}
+
+el("validate").onclick = () => {
+  try {
+    const r = parse();
+    const notes = r.tracks.reduce((s, t) => s + t.notes.length, 0);
+    say(`valid: "${r.title}" - ${r.tracks.length} tracks, ${notes} notes, `
+      + `${r.tempo} bpm, ${r.time_signature[0]}/${r.time_signature[1]}`, true);
+  } catch (e) {
+    say("invalid recipe: " + e.message, false);
+  }
+};
+
+el("build").onclick = () => {
+  try {
+    const recipe = parse();
+    const bytes = nada.buildMidi(recipe);
+    const name = recipe.title.replace(/ /g, "_") + ".mid";
+    const url = URL.createObjectURL(new Blob([bytes], { type: "audio/midi" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+    const notes = recipe.tracks.reduce((s, t) => s + t.notes.length, 0);
+    built = { recipe, bytes };
+    el("play").disabled = false;
+    say(`built ${name}: ${recipe.tracks.length} tracks, ${notes} notes, `
+      + `${bytes.length} bytes`, true);
+  } catch (e) {
+    say("invalid recipe: " + e.message, false);
+  }
+};
+
+// --- approximate WebAudio preview ---
+let actx = null, scheduled = [];
+
+function waveFor(instrument, drums) {
+  if (drums) return null; // noise
+  if (instrument < 8) return "triangle";        // pianos
+  if (instrument < 16) return "sine";           // chromatic percussion
+  if (instrument < 32) return "sawtooth";       // organs/guitars
+  if (instrument < 40) return "square";         // basses
+  if (instrument < 56) return "triangle";       // strings/brass-ish
+  if (instrument < 80) return "sine";           // reeds/flutes
+  return "sawtooth";                            // leads/pads/fx
+}
+
+function freq(pitch) { return 440 * Math.pow(2, (pitch - 69) / 12); }
+
+el("play").onclick = () => {
+  if (!built) return;
+  el("play").disabled = true;
+  el("stop").disabled = false;
+  actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+  const t0 = actx.currentTime + 0.1;
+  const tpb = built.recipe.ticks_per_beat;
+  const spb = 60 / built.recipe.tempo;
+  let last = 0;
+  for (const tr of built.recipe.tracks) {
+    const wave = waveFor(tr.instrument, tr.drums);
+    for (const n of tr.notes) {
+      const start = t0 + (n.start / tpb) * spb;
+      const dur = (n.duration / tpb) * spb;
+      last = Math.max(last, start + dur);
+      for (const p of n.pitches) {
+        let node;
+        if (tr.drums) {
+          const len = Math.min(dur, 0.3);
+          const buf = actx.createBuffer(1, actx.sampleRate * len,
+            actx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < data.length; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
+          }
+          node = actx.createBufferSource();
+          node.buffer = buf;
+          const f = actx.createBiquadFilter();
+          f.type = p < 40 ? "lowpass" : "highpass";
+          f.frequency.value = p < 40 ? 150 : 5000;
+          node.connect(f).connect(actx.destination);
+        } else {
+          node = actx.createOscillator();
+          node.type = wave;
+          node.frequency.value = freq(p);
+          const g = actx.createGain();
+          g.gain.setValueAtTime((n.velocity / 127) * 0.2, start);
+          g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+          node.connect(g).connect(actx.destination);
+        }
+        node.start(start);
+        node.stop(start + dur + 0.05);
+        scheduled.push(node);
+      }
+    }
+  }
+  const doneMs = (last - actx.currentTime) * 1000;
+  const timer = setTimeout(stopPreview, doneMs + 200);
+  scheduled.push({ stop: () => clearTimeout(timer) });
+};
+
+function stopPreview() {
+  for (const n of scheduled) { try { n.stop(); } catch (e) {} }
+  scheduled = [];
+  el("play").disabled = !built;
+  el("stop").disabled = true;
+}
+el("stop").onclick = stopPreview;
+</script>
+</body>
+</html>
