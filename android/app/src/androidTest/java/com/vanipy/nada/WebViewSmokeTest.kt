@@ -69,6 +69,10 @@ class WebViewSmokeTest {
             if (found) break
             Thread.sleep(500)
         }
-        assertTrue("twinkle_twinkle.mid was not found in MediaStore", found)
+        val pageStatus = evalJs("document.getElementById('status').textContent")
+        assertTrue(
+            "twinkle_twinkle.mid was not found in MediaStore; page status: $pageStatus",
+            found
+        )
     }
 }

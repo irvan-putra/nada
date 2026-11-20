@@ -47,7 +47,13 @@ class MainActivity : Activity() {
             @JavascriptInterface
             fun saveMidi(base64Data: String, filename: String) {
                 val safeName = filename.replace(Regex("[^A-Za-z0-9._-]"), "_")
-                val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                Log.i("nada", "saveMidi called: $safeName")
+                val bytes = try {
+                    Base64.decode(base64Data, Base64.DEFAULT)
+                } catch (e: Exception) {
+                    Log.e("nada", "saveMidi base64 decode failed", e)
+                    return
+                }
                 val values = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, safeName)
                     put(MediaStore.MediaColumns.MIME_TYPE, "audio/midi")
@@ -60,10 +66,12 @@ class MainActivity : Activity() {
                     MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
                     values
                 )
+                Log.i("nada", "saveMidi insert uri=$uri bytes=${bytes.size}")
                 val ok = uri?.let { contentResolver.openOutputStream(it) }?.use {
                     it.write(bytes)
                     true
                 } ?: false
+                Log.i("nada", "saveMidi write ok=$ok")
                 runOnUiThread {
                     val msg = if (ok) "saved to Music/nada/$safeName" else "save failed"
                     Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
