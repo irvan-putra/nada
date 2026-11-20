@@ -69,7 +69,9 @@ jobs:
             export SIGNING_KEYSTORE_PATH="$RUNNER_TEMP/keystore.jks"
             gradle -p android :app:assembleRelease
             unset SIGNING_KEYSTORE_PATH
-            adb install -r android/app/build/outputs/apk/release/app-release.apk
+            APK=$(ls "$GITHUB_WORKSPACE"/android/app/build/outputs/apk/release/*.apk | head -1)
+            echo "release APK: $APK"
+            adb install -r "$APK"
             adb shell am start -n com.vanipy.nada/.MainActivity --ez autosave true
             sleep 3
             adb exec-out screencap -p > "$RUNNER_TEMP/nada-runtime-1.png"
