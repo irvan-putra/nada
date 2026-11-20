@@ -29,27 +29,11 @@ class MainActivity : Activity() {
         val assetLoader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
-        // CI test hook: launch with --ez autosave true to build the example
-        // recipe once the page has loaded. The launcher activity is exported,
-        // so any app could send this extra - gate it to emulator system
-        // images so it is inert on physical devices.
-        val isEmulator = android.os.Build.FINGERPRINT.let {
-            it.contains("sdk_gphone") || it.contains("sdk_phone") || it.contains("generic")
-        }
-        val autosave = isEmulator && intent.getBooleanExtra("autosave", false)
-        var autosaved = false
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
                 view: WebView,
                 request: WebResourceRequest
             ): WebResourceResponse? = assetLoader.shouldInterceptRequest(request.url)
-
-            override fun onPageFinished(view: WebView, url: String) {
-                if (autosave && !autosaved) {
-                    autosaved = true
-                    view.evaluateJavascript("document.getElementById('build').click(); 'clicked'", null)
-                }
-            }
 
             override fun onReceivedError(
                 view: WebView,

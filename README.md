@@ -124,13 +124,11 @@ a runtime dependency.
   save on the same device can be invisible to MediaStore.Files queries for
   a while even though the insert and write succeeded. Fresh first installs
   are unaffected; reinstall-over-itself cycles during testing may show this.
-- The `autosave` launch extra (`am start --ez autosave true`) exists only
-  so CI can exercise the save path hands-free. It defaults to false, fires
-  at most once per launch, and a normal launcher tap never sets it. Because
-  the launcher activity is exported, another app could send the extra; the
-  hook therefore only runs on emulator system images and is ignored on
-  physical devices. Even where reachable it is visible (it opens the app)
-  and write-only (saves a .mid to Music/nada; no read or share path).
+- The production app carries no test hooks or automation extras. CI proves
+  the save path against the signed release APK by driving the real UI on an
+  emulator: it launches the app, taps the page's Build button through the
+  accessibility tree (uiautomator dump + input tap), and checks Music/nada
+  for the saved .mid, failing the run if it is missing.
 
 ## License
 
