@@ -36,7 +36,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME:-manual-$(date +%Y%m%d-%H%M%S)}"
-          gh release create "$TAG" \
-            android/app/build/outputs/apk/release/app-release.apk \
+          APK="nada-${TAG}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$APK"
+          ( cd android/app/build/outputs/apk/release && sha256sum app-release.apk ) | sed "s|app-release.apk|$APK|" > "$APK.sha256"
+          gh release create "$TAG" "$APK" "$APK.sha256" \
             --title "$TAG" --generate-notes || \
-          gh release upload "$TAG" android/app/build/outputs/apk/release/app-release.apk --clobber
+          gh release upload "$TAG" "$APK" "$APK.sha256" --clobber
