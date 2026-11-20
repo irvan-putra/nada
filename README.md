@@ -112,6 +112,23 @@ trip, and (when the optional `mido` package is installed, dev only)
 cross-checking the output with an independent MIDI library. Never
 a runtime dependency.
 
+## Known limitations (Android)
+
+- Runtime-verified on an x86_64 emulator (API 33, hardware-accelerated):
+  page load, recipe build, and saving through MediaStore.Audio to
+  Music/nada all pass in CI, including with the signed release APK. It has
+  not yet run on a physical phone; treat first on-device installs as
+  unverified.
+- MediaStore lifecycle: saving a file and then uninstalling the app leaves
+  provider-side state for that package's entries. A subsequent same-package
+  save on the same device can be invisible to MediaStore.Files queries for
+  a while even though the insert and write succeeded. Fresh first installs
+  are unaffected; reinstall-over-itself cycles during testing may show this.
+- The `autosave` launch extra (`am start --ez autosave true`) exists only
+  so CI can exercise the save path hands-free. It defaults to false, fires
+  at most once per launch, and cannot be triggered by a normal launcher
+  tap.
+
 ## License
 
 GNU Affero General Public License v3.0. See LICENSE.
