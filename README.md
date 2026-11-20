@@ -126,8 +126,11 @@ a runtime dependency.
   are unaffected; reinstall-over-itself cycles during testing may show this.
 - The `autosave` launch extra (`am start --ez autosave true`) exists only
   so CI can exercise the save path hands-free. It defaults to false, fires
-  at most once per launch, and cannot be triggered by a normal launcher
-  tap.
+  at most once per launch, and a normal launcher tap never sets it. Because
+  the launcher activity is exported, another app could send the extra; the
+  hook therefore only runs on emulator system images and is ignored on
+  physical devices. Even where reachable it is visible (it opens the app)
+  and write-only (saves a .mid to Music/nada; no read or share path).
 
 ## License
 
