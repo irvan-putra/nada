@@ -35,9 +35,12 @@ jobs:
           gradle-version: "8.7"
       - name: enable KVM for the emulator
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0660", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+          sudo udevadm trigger --name-match=kvm || true
+          sudo chmod 666 /dev/kvm || true
+          ls -l /dev/kvm || true
+          if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then echo "KVM_OK"; else echo "KVM_UNAVAILABLE"; fi
       - name: run instrumentation tests on an emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
