@@ -19,6 +19,9 @@ class MainActivity : Activity() {
         this.webView = webView
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+        // file:///android_asset is blocked by default when targeting API 30+;
+        // the app only ever loads its own bundled assets, so re-enable it.
+        webView.settings.allowFileAccess = true
         webView.addJavascriptInterface(object {
             @JavascriptInterface
             fun saveMidi(base64Data: String, filename: String) {
