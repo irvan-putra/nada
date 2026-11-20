@@ -86,6 +86,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # gh release create needs a git checkout to resolve the repository
+      # (run 44679431930 failed with "not a git repository" without one).
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: candidate-apk
