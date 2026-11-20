@@ -13,7 +13,7 @@ jobs:
     # patuh pre-publish source gate: package, version format, label,
     # permission/license drift, family icon geometry, badge reads the
     # candidate version. A failure stops the release before anything builds.
-    uses: irvan-putra/patuh/.github/workflows/release-gate.yml@v0.2.1
+    uses: irvan-putra/patuh/.github/workflows/release-gate.yml@b88d95985384714ee9b383dc73b4ee784d106e12
     with:
       app: nada
       published: false
@@ -75,7 +75,7 @@ jobs:
     # logged for the sidecar) before anything is published. This is the
     # preventive boundary: a defect here stops the release.
     needs: release
-    uses: irvan-putra/patuh/.github/workflows/release-gate.yml@v0.2.1
+    uses: irvan-putra/patuh/.github/workflows/release-gate.yml@b88d95985384714ee9b383dc73b4ee784d106e12
     with:
       app: nada
       published: false
@@ -104,7 +104,7 @@ jobs:
     # post-publish: verifies the live release (tag, APK name, checksum,
     # downloaded sha256, packaged icon). Detects, cannot undo.
     needs: publish
-    uses: irvan-putra/patuh/.github/workflows/release-gate.yml@v0.2.1
+    uses: irvan-putra/patuh/.github/workflows/release-gate.yml@b88d95985384714ee9b383dc73b4ee784d106e12
     with:
       app: nada
       published: true
