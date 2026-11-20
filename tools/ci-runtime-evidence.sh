@@ -17,7 +17,5 @@ sleep 3
 adb exec-out screencap -p > "$RUNNER_TEMP/nada-runtime-1.png"
 sleep 2
 adb exec-out screencap -p > "$RUNNER_TEMP/nada-runtime-2.png"
-adb shell content query --uri content://media/external_primary/audio/media \
-  --projection _display_name:relative_path:_size \
-  --where "_display_name='twinkle_twinkle.mid'" || true
+adb shell ls -l /storage/emulated/0/Music/nada/ || true
 adb uninstall com.vanipy.nada
