@@ -12,6 +12,10 @@ the interface; the code is nada's problem.
 
 Status: early prototype. Python 3.8+ standard library only.
 
+Project boundary (per the owner): nada stays a precise recipe-to-MIDI
+generator. The conversational composing workshop is a separate project,
+Denting; nada does not grow chat or free-form composition features.
+
 ## Usage
 
 ```sh
