@@ -40,7 +40,7 @@ class MainActivity : Activity() {
                 request: WebResourceRequest,
                 error: android.webkit.WebResourceError
             ) {
-                Log.e("nada", "WebView error ${'$'}{error.errorCode} ${'$'}{error.description} for ${'$'}{request.url}")
+                Log.e("nada", "WebView error ${error.errorCode} ${error.description} for ${request.url}")
             }
         }
         webView.addJavascriptInterface(object {

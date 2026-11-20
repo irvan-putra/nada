@@ -55,7 +55,13 @@ dependencies {
 // Single source of truth: ../web holds the only copy of the web app.
 // Sync it into assets at build time so the music logic is not duplicated.
 tasks.register("syncWebAssets", Copy) {
-    from("../web")
+    // ../web is the repo-root web/ directory, seen from this module (android/app).
+    from("../../web")
     into("src/main/assets/web")
+    doLast {
+        if (!file("src/main/assets/web/index.html").exists()) {
+            throw new GradleException("syncWebAssets: web/index.html missing - web app was not bundled")
+        }
+    }
 }
 preBuild.dependsOn("syncWebAssets")
