@@ -16,6 +16,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.7"
+      - name: launcher icon is fresh
+        run: |
+          pip install pillow==12.3.0
+          VER=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          python3 tools/badge_icon.py "$VER"
+          git diff --exit-code -- android/app/src/main/res || { echo "launcher icon is stale; run: python3 tools/badge_icon.py $VER and commit"; exit 1; }
       - run: gradle -p android :app:assembleDebug
       - uses: actions/upload-artifact@v4
         with:
@@ -43,6 +49,11 @@ jobs:
           if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then echo "KVM_OK"; else echo "KVM_UNAVAILABLE"; fi
       - name: run instrumentation tests on an emulator
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          SIGNING_KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         with:
           api-level: 33
           arch: x86_64
@@ -51,6 +62,21 @@ jobs:
             adb shell settings put global verifier_verify_adb_installs 0
             adb shell settings put global package_verifier_enable 0
             adb logcat -c
+            # Runtime evidence for the actual signed release build first:
+            # install it, launch with autosave, screenshot the loaded page and
+            # the save toast, and query MediaStore for the saved .mid.
+            echo "$SIGNING_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/keystore.jks"
+            export SIGNING_KEYSTORE_PATH="$RUNNER_TEMP/keystore.jks"
+            gradle -p android :app:assembleRelease
+            unset SIGNING_KEYSTORE_PATH
+            adb install -r android/app/build/outputs/apk/release/app-release.apk
+            adb shell am start -n com.vanipy.nada/.MainActivity --ez autosave true
+            sleep 3
+            adb exec-out screencap -p > "$RUNNER_TEMP/nada-runtime-1.png"
+            sleep 2
+            adb exec-out screencap -p > "$RUNNER_TEMP/nada-runtime-2.png"
+            adb shell content query --uri content://media/external_primary/audio/media --projection _display_name:relative_path:_size --where "_display_name='twinkle_twinkle.mid'" || true
+            adb uninstall com.vanipy.nada
             adb logcat -v threadtime > "$RUNNER_TEMP/nada-logcat.txt" 2>&1 &
             LOGCAT_PID=$!
             set +e
@@ -67,4 +93,6 @@ jobs:
             android/app/build/reports/androidTests/**
             android/app/build/outputs/androidTest-results/**
             ${{ runner.temp }}/nada-logcat.txt
+            ${{ runner.temp }}/nada-runtime-1.png
+            ${{ runner.temp }}/nada-runtime-2.png
           if-no-files-found: ignore

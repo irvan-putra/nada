@@ -29,11 +29,22 @@ class MainActivity : Activity() {
         val assetLoader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
+        // Launch with --ez autosave true to build the example recipe once the
+        // page has loaded (used by CI to exercise the save path hands-free).
+        val autosave = intent.getBooleanExtra("autosave", false)
+        var autosaved = false
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
                 view: WebView,
                 request: WebResourceRequest
             ): WebResourceResponse? = assetLoader.shouldInterceptRequest(request.url)
+
+            override fun onPageFinished(view: WebView, url: String) {
+                if (autosave && !autosaved) {
+                    autosaved = true
+                    view.evaluateJavascript("document.getElementById('build').click(); 'clicked'", null)
+                }
+            }
 
             override fun onReceivedError(
                 view: WebView,
