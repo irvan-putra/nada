@@ -51,11 +51,12 @@ jobs:
             adb shell settings put global verifier_verify_adb_installs 0
             adb shell settings put global package_verifier_enable 0
             adb logcat -c
-            (adb logcat -v threadtime > "$RUNNER_TEMP/nada-logcat.txt" 2>&1 &)
+            adb logcat -v threadtime > "$RUNNER_TEMP/nada-logcat.txt" 2>&1 &
+            LOGCAT_PID=$!
             set +e
             gradle -p android connectedDebugAndroidTest
             STATUS=$?
-            pkill -f 'adb logcat' || true
+            kill "$LOGCAT_PID" 2>/dev/null || true
             exit $STATUS
       - name: upload test diagnostics
         if: always()
