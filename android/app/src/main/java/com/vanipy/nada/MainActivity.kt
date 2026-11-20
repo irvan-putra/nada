@@ -53,8 +53,11 @@ class MainActivity : Activity() {
                     put(MediaStore.MediaColumns.MIME_TYPE, "audio/midi")
                     put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/nada")
                 }
+                // MediaStore.Files only allows Download/ and Documents/ as primary
+                // directories; audio (incl. MIDI) must go through the Audio collection
+                // for Music/ to be accepted.
                 val uri = contentResolver.insert(
-                    MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+                    MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
                     values
                 )
                 val ok = uri?.let { contentResolver.openOutputStream(it) }?.use {
