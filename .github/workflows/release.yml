@@ -82,7 +82,7 @@ jobs:
       candidate_apk_artifact: candidate-apk
 
   publish:
-    needs: candidate-bytes
+    needs: [release, candidate-bytes]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
