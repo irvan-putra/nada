@@ -61,31 +61,8 @@ jobs:
           script: |
             adb shell settings put global verifier_verify_adb_installs 0
             adb shell settings put global package_verifier_enable 0
-            adb logcat -c
-            # Runtime evidence for the actual signed release build first:
-            # install it, launch with autosave, screenshot the loaded page and
-            # the save toast, and query MediaStore for the saved .mid.
-            echo "$SIGNING_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/keystore.jks"
-            export SIGNING_KEYSTORE_PATH="$RUNNER_TEMP/keystore.jks"
-            gradle -p android :app:assembleRelease
-            unset SIGNING_KEYSTORE_PATH
-            APK=$(ls "$GITHUB_WORKSPACE"/android/app/build/outputs/apk/release/*.apk | head -1)
-            echo "release APK: $APK"
-            adb install -r "$APK"
-            adb shell am start -n com.vanipy.nada/.MainActivity --ez autosave true
-            sleep 3
-            adb exec-out screencap -p > "$RUNNER_TEMP/nada-runtime-1.png"
-            sleep 2
-            adb exec-out screencap -p > "$RUNNER_TEMP/nada-runtime-2.png"
-            adb shell content query --uri content://media/external_primary/audio/media --projection _display_name:relative_path:_size --where "_display_name='twinkle_twinkle.mid'" || true
-            adb uninstall com.vanipy.nada
-            adb logcat -v threadtime > "$RUNNER_TEMP/nada-logcat.txt" 2>&1 &
-            LOGCAT_PID=$!
-            set +e
-            gradle -p android connectedDebugAndroidTest
-            STATUS=$?
-            kill "$LOGCAT_PID" 2>/dev/null || true
-            exit $STATUS
+            bash tools/ci-runtime-evidence.sh
+            bash tools/ci-emulator-tests.sh
       - name: upload test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
