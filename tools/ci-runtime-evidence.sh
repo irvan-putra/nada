@@ -17,23 +17,30 @@ echo "release APK: $APK"
 adb install -r "$APK"
 adb shell am start -n com.vanipy.nada/.MainActivity
 sleep 6  # let the bundled page finish loading
-adb shell uiautomator dump /sdcard/nada-window.xml
-adb pull /sdcard/nada-window.xml "$RUNNER_TEMP/nada-window.xml" >/dev/null
-TAP=$(python3 - "$RUNNER_TEMP/nada-window.xml" <<'PY'
-import re, sys, xml.etree.ElementTree as ET
-for node in ET.parse(sys.argv[1]).iter('node'):
-    label = ((node.get('text') or '') + ' ' + (node.get('content-desc') or '')).lower()
-    if 'build' in label:
-        m = re.match(r'\[(\d+),(\d+)\]\[(\d+),(\d+)\]', node.get('bounds') or '')
-        if m:
-            x1, y1, x2, y2 = map(int, m.groups())
-            print((x1 + x2) // 2, (y1 + y2) // 2)
-            break
+# WebView DOM is not exposed to uiautomator's accessibility dump on the CI
+# emulator (proven: run 44675362098 dump contains the WebView node only), so
+# find the page's Build button by its exact CSS color instead: #0b7285 teal,
+# the only solid-teal element on the page (button.primary in web/index.html).
+pip install pillow==12.3.0 --quiet
+adb exec-out screencap -p > "$RUNNER_TEMP/nada-pre-tap.png"
+TAP=$(python3 - "$RUNNER_TEMP/nada-pre-tap.png" <<'PY'
+import sys
+from PIL import Image
+im = Image.open(sys.argv[1]).convert('RGB')
+w, h = im.size
+px = im.load()
+xs, ys = [], []
+for y in range(h):
+    for x in range(w):
+        r, g, b = px[x, y]
+        if abs(r - 11) <= 2 and abs(g - 114) <= 2 and abs(b - 133) <= 2:
+            xs.append(x); ys.append(y)
+if xs:
+    print((min(xs) + max(xs)) // 2, (min(ys) + max(ys)) // 2)
 PY
 )
 if [ -z "$TAP" ]; then
-  echo "ERROR: Build button not found in the UI accessibility dump:"
-  cat "$RUNNER_TEMP/nada-window.xml"
+  echo "ERROR: teal Build button (#0b7285) not found on screen; see nada-pre-tap.png in diagnostics"
   exit 1
 fi
 echo "tapping Build button at $TAP"
