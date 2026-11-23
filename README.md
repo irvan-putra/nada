@@ -12,6 +12,11 @@ the interface; the code is nada's problem.
 
 Status: early prototype. Python 3.8+ standard library only.
 
+Try it: the [web version](https://vanipy.com/nada/) runs in any browser;
+signed Android APKs are on the
+[releases page](https://github.com/irvan-putra/nada/releases), also listed
+in the [kaji gallery](https://vanipy.com/kaji/apk/).
+
 Project boundary (per the owner): nada stays a precise recipe-to-MIDI
 generator. The conversational composing workshop is a separate project,
 Denting; nada does not grow chat or free-form composition features.
@@ -118,21 +123,16 @@ a runtime dependency.
 
 ## Known limitations (Android)
 
-- Runtime-verified on an x86_64 emulator (API 33, hardware-accelerated):
-  page load, recipe build, and saving through MediaStore.Audio to
-  Music/nada all pass in CI, including with the signed release APK. It has
-  not yet run on a physical phone; treat first on-device installs as
-  unverified.
+- Verified on an emulator only so far: page load, recipe build, and saving
+  through MediaStore.Audio to Music/nada pass in CI, including with the
+  signed release APK. It has not yet run on a physical phone; treat first
+  on-device installs as unverified.
 - MediaStore lifecycle: saving a file and then uninstalling the app leaves
   provider-side state for that package's entries. A subsequent same-package
   save on the same device can be invisible to MediaStore.Files queries for
   a while even though the insert and write succeeded. Fresh first installs
   are unaffected; reinstall-over-itself cycles during testing may show this.
-- The production app carries no test hooks or automation extras. CI proves
-  the save path against the signed release APK by driving the real UI on an
-  emulator: it launches the app, taps the page's Build button through the
-  accessibility tree (uiautomator dump + input tap), and checks Music/nada
-  for the saved .mid, failing the run if it is missing.
+- The production app carries no test hooks or automation extras.
 
 ## License
 
